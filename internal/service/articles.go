@@ -1,12 +1,11 @@
-// internal/service/articles.go
 package service
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"test-golang/internal/helpers"
 	"test-golang/internal/models"
-	"time"
 )
 
 type ArticleService struct {
@@ -35,7 +34,6 @@ func (s *ArticleService) GetAll() ([]models.Article, error) {
 		var article models.Article
 		var createdAt, updatedAt []uint8
 
-		// Scan the database row into variables
 		err := rows.Scan(
 			&article.ID,
 			&article.Title,
@@ -47,15 +45,14 @@ func (s *ArticleService) GetAll() ([]models.Article, error) {
 			return nil, err
 		}
 
-		// Convert created_at and updated_at from []uint8 to time.Time
-		article.CreatedAt, err = time.Parse("2006-01-02 15:04:05", string(createdAt))
+		article.CreatedAt, err = helpers.ParseTimestamp(createdAt)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing created_at: %w", err)
+			return nil, err
 		}
 
-		article.UpdatedAt, err = time.Parse("2006-01-02 15:04:05", string(updatedAt))
+		article.UpdatedAt, err = helpers.ParseTimestamp(updatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing updated_at: %w", err)
+			return nil, err
 		}
 
 		articles = append(articles, article)
@@ -69,7 +66,7 @@ func (s *ArticleService) GetByID(id int) (models.Article, error) {
 	}
 
 	var article models.Article
-	var createdAt, updatedAt []uint8 // Use []uint8 to scan MySQL TIMESTAMP
+	var createdAt, updatedAt []uint8
 
 	err := s.db.QueryRow(`
         SELECT id, title, content, created_at, updated_at 
@@ -91,12 +88,12 @@ func (s *ArticleService) GetByID(id int) (models.Article, error) {
 	}
 
 	// Convert []uint8 to time.Time
-	article.CreatedAt, err = time.Parse("2006-01-02 15:04:05", string(createdAt))
+	article.CreatedAt, err = helpers.ParseTimestamp(createdAt)
 	if err != nil {
 		return models.Article{}, fmt.Errorf("error parsing created_at: %w", err)
 	}
 
-	article.UpdatedAt, err = time.Parse("2006-01-02 15:04:05", string(updatedAt))
+	article.UpdatedAt, err = helpers.ParseTimestamp(updatedAt)
 	if err != nil {
 		return models.Article{}, fmt.Errorf("error parsing updated_at: %w", err)
 	}

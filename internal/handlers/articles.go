@@ -4,7 +4,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"test-golang/internal/models"
@@ -30,23 +29,19 @@ func (h *ArticleHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 		common.WriteError(w, http.StatusInternalServerError, "Failed to get articles")
 		return
 	}
-	common.WriteJSON(w, http.StatusOK, articles)
+	common.WriteJSON(w, http.StatusOK, articles, "Successfully fetched articles")
 }
 
 func (h *ArticleHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Printf("Invalid article ID: %v", vars["id"])
 		common.WriteError(w, http.StatusBadRequest, "Invalid article ID")
 		return
 	}
 
-	log.Printf("Attempting to fetch article with ID: %d", id)
-
 	article, err := h.service.GetByID(id)
 	if err != nil {
-		log.Printf("Error fetching article with ID %d: %v", id, err)
 		if err.Error() == fmt.Sprintf("article with ID %d not found", id) {
 			common.WriteError(w, http.StatusNotFound, "Article not found")
 		} else {
@@ -55,8 +50,7 @@ func (h *ArticleHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Successfully fetched article: %+v", article)
-	common.WriteJSON(w, http.StatusOK, article)
+	common.WriteJSON(w, http.StatusOK, article, "Successfully fetched article")
 }
 
 func (h *ArticleHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +66,7 @@ func (h *ArticleHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.WriteJSON(w, http.StatusCreated, createdArticle)
+	common.WriteJSON(w, http.StatusCreated, createdArticle, "Successfully created article")
 }
 
 func (h *ArticleHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +90,7 @@ func (h *ArticleHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, updatedArticle)
+	common.WriteJSON(w, http.StatusOK, updatedArticle, "Article updated successfully")
 }
 
 func (h *ArticleHandler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
@@ -112,5 +106,5 @@ func (h *ArticleHandler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, map[string]string{"message": "Article deleted successfully"})
+	common.WriteJSON(w, http.StatusOK, map[string]string{"message": "Article deleted successfully"}, "Article deleted successfully")
 }
