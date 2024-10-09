@@ -1,4 +1,3 @@
-// pkg/common/response.go
 package common
 
 import (
@@ -8,17 +7,19 @@ import (
 
 type Response struct {
 	Status  string      `json:"status"`
-	Data    interface{} `json:"data,omitempty"`
 	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
-func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
+func WriteJSON(w http.ResponseWriter, status int, data interface{}, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	response := Response{
-		Status: "success",
-		Data:   data,
+		Status:  "success",
+		Data:    data,
+		Message: message,
 	}
+
 	json.NewEncoder(w).Encode(response)
 }
 
