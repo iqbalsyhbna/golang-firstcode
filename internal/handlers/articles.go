@@ -56,12 +56,14 @@ func (h *ArticleHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
 func (h *ArticleHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
 	var article models.Article
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		fmt.Println(err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
 	createdArticle, err := h.service.Create(article)
 	if err != nil {
+		fmt.Println(err)
 		common.WriteError(w, http.StatusInternalServerError, "Failed to create article")
 		return
 	}
@@ -73,12 +75,14 @@ func (h *ArticleHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
+		fmt.Println(err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid article ID")
 		return
 	}
 
 	var article models.Article
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		fmt.Println(err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
@@ -86,6 +90,7 @@ func (h *ArticleHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	article.ID = id
 	updatedArticle, err := h.service.Update(article)
 	if err != nil {
+		fmt.Println(err)
 		common.WriteError(w, http.StatusInternalServerError, "Failed to update article")
 		return
 	}
@@ -106,5 +111,5 @@ func (h *ArticleHandler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, map[string]string{"message": "Article deleted successfully"}, "Article deleted successfully")
+	common.WriteJSON(w, http.StatusOK, nil, "Article deleted successfully")
 }

@@ -25,11 +25,13 @@ func NewApp() *App {
 
 	// Initialize services with database connection
 	articleService := service.NewArticleService(db)
+	userService := service.NewUserService(db)
 
 	// Initialize handlers with services
 	articleHandler := handlers.NewArticleHandler(articleService)
+	userHandler := handlers.NewUserHandler(userService)
 
-	routes.SetupRoutes(app.Router, articleHandler)
+	routes.SetupRoutes(app.Router, articleHandler, userHandler)
 	return app
 }
 

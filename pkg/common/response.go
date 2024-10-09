@@ -19,6 +19,7 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}, message stri
 		Data:    data,
 		Message: message,
 	}
+
 	json.NewEncoder(w).Encode(response)
 }
 

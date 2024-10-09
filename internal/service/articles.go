@@ -20,10 +20,11 @@ func NewArticleService(db *sql.DB) *ArticleService {
 
 func (s *ArticleService) GetAll() ([]models.Article, error) {
 	rows, err := s.db.Query(`
-		SELECT id, title, content, created_at, updated_at 
-		FROM articles
-		ORDER BY created_at DESC
-	`)
+       	SELECT a.id, a.title, a.content, a.created_at, a.updated_at, b.name
+        FROM articles a
+        JOIN users b ON a.users_id = b.id
+        ORDER BY created_at DESC
+    `)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +41,7 @@ func (s *ArticleService) GetAll() ([]models.Article, error) {
 			&article.Content,
 			&createdAt,
 			&updatedAt,
+			&article.Author.Name,
 		)
 		if err != nil {
 			return nil, err
@@ -69,15 +71,17 @@ func (s *ArticleService) GetByID(id int) (models.Article, error) {
 	var createdAt, updatedAt []uint8
 
 	err := s.db.QueryRow(`
-        SELECT id, title, content, created_at, updated_at 
-        FROM articles 
-        WHERE id = ?
+        SELECT a.id, a.title, a.content, a.created_at, a.updated_at, u.name
+        FROM articles a
+		JOIN users u ON a.users_id = u.id
+        WHERE a.id = ?
     `, id).Scan(
 		&article.ID,
 		&article.Title,
 		&article.Content,
 		&createdAt,
 		&updatedAt,
+		&article.Author.Name,
 	)
 
 	if err != nil {
@@ -87,7 +91,6 @@ func (s *ArticleService) GetByID(id int) (models.Article, error) {
 		return models.Article{}, fmt.Errorf("database error: %w", err)
 	}
 
-	// Convert []uint8 to time.Time
 	article.CreatedAt, err = helpers.ParseTimestamp(createdAt)
 	if err != nil {
 		return models.Article{}, fmt.Errorf("error parsing created_at: %w", err)
@@ -103,9 +106,9 @@ func (s *ArticleService) GetByID(id int) (models.Article, error) {
 
 func (s *ArticleService) Create(article models.Article) (models.Article, error) {
 	result, err := s.db.Exec(`
-		INSERT INTO articles (title, content) 
-		VALUES (?, ?)
-	`, article.Title, article.Content)
+		INSERT INTO articles (title, content, users_id) 
+		VALUES (?, ?, ?)
+	`, article.Title, article.Content, article.UserID)
 	if err != nil {
 		return models.Article{}, err
 	}
@@ -121,9 +124,9 @@ func (s *ArticleService) Create(article models.Article) (models.Article, error) 
 func (s *ArticleService) Update(article models.Article) (models.Article, error) {
 	result, err := s.db.Exec(`
 		UPDATE articles 
-		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
+		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP, users_id = ?
 		WHERE id = ?
-	`, article.Title, article.Content, article.ID)
+	`, article.Title, article.Content, article.UserID, article.ID)
 	if err != nil {
 		return models.Article{}, err
 	}
