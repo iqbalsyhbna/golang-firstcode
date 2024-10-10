@@ -22,7 +22,7 @@ func (s *ArticleService) GetAll() ([]models.Article, error) {
 	rows, err := s.db.Query(`
        	SELECT a.id, a.title, a.content, a.created_at, a.updated_at, b.name
         FROM articles a
-        JOIN users b ON a.users_id = b.id
+        JOIN users b ON a.user_id = b.id
         ORDER BY created_at DESC
     `)
 	if err != nil {
@@ -73,7 +73,7 @@ func (s *ArticleService) GetByID(id int) (models.Article, error) {
 	err := s.db.QueryRow(`
         SELECT a.id, a.title, a.content, a.created_at, a.updated_at, u.name
         FROM articles a
-		JOIN users u ON a.users_id = u.id
+		JOIN users u ON a.user_id = u.id
         WHERE a.id = ?
     `, id).Scan(
 		&article.ID,
@@ -124,7 +124,7 @@ func (s *ArticleService) Create(article models.Article) (models.Article, error) 
 func (s *ArticleService) Update(article models.Article) (models.Article, error) {
 	result, err := s.db.Exec(`
 		UPDATE articles 
-		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP, users_id = ?
+		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP, user_id = ?
 		WHERE id = ?
 	`, article.Title, article.Content, article.UserID, article.ID)
 	if err != nil {

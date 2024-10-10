@@ -16,16 +16,23 @@ type App struct {
 }
 
 func NewApp() *App {
+
 	// Initialize database
-	db := config.InitDB()
+	config.InitDBs()
 
 	app := &App{
 		Router: mux.NewRouter(),
 	}
 
+	golangDB := config.GetDB("golang_db")
+
+	if golangDB == nil {
+		log.Fatal("Failed to initialize one or more databases")
+	}
+
 	// Initialize services with database connection
-	articleService := service.NewArticleService(db)
-	userService := service.NewUserService(db)
+	articleService := service.NewArticleService(golangDB)
+	userService := service.NewUserService(golangDB)
 
 	// Initialize handlers with services
 	articleHandler := handlers.NewArticleHandler(articleService)
@@ -42,5 +49,14 @@ func (app *App) Run(addr string) error {
 
 func main() {
 	app := NewApp()
+
+	defer func() {
+		for dbName, db := range config.DBMap {
+			if err := db.Close(); err != nil {
+				log.Printf("Error closing %s database connection: %v", dbName, err)
+			}
+		}
+	}()
+
 	log.Fatal(app.Run(":8000"))
 }

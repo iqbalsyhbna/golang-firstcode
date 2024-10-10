@@ -9,33 +9,38 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var DB *sql.DB
+var DBMap map[string]*sql.DB
 
-func InitDB() *sql.DB {
-	var err error
-	
-	// Konfigurasi koneksi MySQL
-	connStr := "root:@tcp(localhost:3306)/golang_db"
-	DB, err = sql.Open("mysql", connStr)
-	if err != nil {
-		log.Fatalf("Error opening database: %q", err)
+func InitDBs() {
+	DBMap = make(map[string]*sql.DB)
+
+	// Konfigurasi untuk multiple databases
+	dbConfigs := map[string]string{
+		"golang_db": "root:@tcp(localhost:3306)/golang_db",
 	}
 
-	// Set connection pool settings
-	DB.SetMaxOpenConns(25)
-	DB.SetMaxIdleConns(25)
-	DB.SetConnMaxLifetime(5 * time.Minute)
+	for dbName, connStr := range dbConfigs {
+		db, err := sql.Open("mysql", connStr)
+		if err != nil {
+			log.Fatalf("Error opening database %s: %q", dbName, err)
+		}
 
-	// Verify connection
-	err = DB.Ping()
-	if err != nil {
-		log.Fatalf("Error connecting to the database: %q", err)
+		// Set connection pool settings
+		db.SetMaxOpenConns(25)
+		db.SetMaxIdleConns(25)
+		db.SetConnMaxLifetime(5 * time.Minute)
+
+		// Verify connection
+		err = db.Ping()
+		if err != nil {
+			log.Fatalf("Error connecting to the database %s: %q", dbName, err)
+		}
+
+		DBMap[dbName] = db
+		log.Printf("Successfully connected to MySQL database: %s", dbName)
 	}
-
-	log.Println("Successfully connected to MySQL database")
-	return DB
 }
 
-func GetDB() *sql.DB {
-	return DB
+func GetDB(dbName string) *sql.DB {
+	return DBMap[dbName]
 }
