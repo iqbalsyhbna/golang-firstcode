@@ -36,8 +36,8 @@ func StartBackgroundJob() *cron.Cron {
 
 	// Schedule check-in jobs for each day with a random minute
 	for _, day := range days {
-		exactHourCheckIn := 10
-		exactMinuteCheckIn := 5
+		exactHourCheckIn := 7
+		exactMinuteCheckIn := r.Intn(16) + 25
 		randomSecondCheckIn := r.Intn(60) // Random second between 0 and 59
 		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
 
@@ -46,6 +46,7 @@ func StartBackgroundJob() *cron.Cron {
 				log.Printf("Failed to perform check-in: %v", err)
 			}
 		})
+
 		if err != nil {
 			log.Fatalf("Failed to schedule check-in job for day %s: %v", day, err)
 		}
@@ -54,8 +55,8 @@ func StartBackgroundJob() *cron.Cron {
 
 	// Schedule check-out jobs for each day with a random minute
 	for _, day := range days {
-		randomSecondCheckOut := r.Intn(60)   // Random second between 0 and 59
-		randomMinuteCheckOut := r.Intn(60)   // Random minute between 0 and 59
+		randomSecondCheckOut := r.Intn(60)   
+		randomMinuteCheckOut := r.Intn(60)   
 		randomHourCheckOut := r.Intn(2) + 17 // Random hour between 17 and 18 (5 PM to 6 PM)
 		// Fixed format: second minute hour day-of-month month day-of-week
 		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
