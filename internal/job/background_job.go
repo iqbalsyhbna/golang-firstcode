@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"golang-firstcode/internal/helpers"
 	"io"
 	"log"
 	"math/rand"
@@ -27,20 +28,22 @@ type PresenceData struct {
 
 func StartBackgroundJob() *cron.Cron {
 	c := cron.New(cron.WithSeconds())
-
-	// Create a new random generator with a unique seed
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	// Days of the week for scheduling (Monday to Friday)
-	days := []string{"1", "2", "3", "4", "5"} // Monday to Friday
+	days := []string{"1", "2", "3", "4", "5"}
 
-	// Schedule check-in jobs for each day with a random minute
 	for _, day := range days {
 		exactHourCheckIn := 7
 		exactMinuteCheckIn := r.Intn(16) + 25
-		randomSecondCheckIn := r.Intn(60) // Random second between 0 and 59
-		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
+		randomSecondCheckIn := r.Intn(60)
 
+		today := time.Now()
+		if int(today.Weekday()) != 0 && int(today.Weekday()) <= 5 && helpers.IsHoliday(today) {
+			log.Printf("Skipping check-in job for day %s because it's a holiday", day)
+			continue
+		}
+
+		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
 		_, err := c.AddFunc(checkInSchedule, func() {
 			if err := postToAPI("Check-in", "851269"); err != nil {
 				log.Printf("Failed to perform check-in: %v", err)
@@ -53,14 +56,18 @@ func StartBackgroundJob() *cron.Cron {
 		log.Printf("Scheduled check-in job for day %s at %02d:%02d:%02d", day, exactHourCheckIn, exactMinuteCheckIn, randomSecondCheckIn)
 	}
 
-	// Schedule check-out jobs for each day with a random minute
 	for _, day := range days {
-		randomSecondCheckOut := r.Intn(60)   
-		randomMinuteCheckOut := r.Intn(60)   
-		randomHourCheckOut := r.Intn(2) + 17 // Random hour between 17 and 18 (5 PM to 6 PM)
-		// Fixed format: second minute hour day-of-month month day-of-week
-		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
+		randomSecondCheckOut := r.Intn(60)
+		randomMinuteCheckOut := r.Intn(60)
+		randomHourCheckOut := r.Intn(2) + 17
 
+		today := time.Now()
+		if int(today.Weekday()) != 0 && int(today.Weekday()) <= 5 && helpers.IsHoliday(today) {
+			log.Printf("Skipping check-out job for day %s because it's a holiday", day)
+			continue
+		}
+
+		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
 		_, err := c.AddFunc(checkOutSchedule, func() {
 			if err := postToAPI("Check-out", "851269"); err != nil {
 				log.Printf("Failed to perform check-out: %v", err)
