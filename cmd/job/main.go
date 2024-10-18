@@ -16,7 +16,10 @@ func main() {
 		log.Printf("Warning: Error loading config: %v", err)
 	}
 
-	log.Printf("Loaded config: %+v", config)
+	log.Printf("Loaded config: %+v", config.ApiURL)
+	log.Printf("Loaded config: %+v", config.AuthToken)
+	log.Printf("Loaded config: %+v", config.DeviceID)
+	log.Printf("Loaded config: %+v", config.PlatformID)
 
 	log.Println("Starting background job service...")
 

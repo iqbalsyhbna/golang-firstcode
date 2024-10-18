@@ -33,7 +33,7 @@ func StartBackgroundJob() *cron.Cron {
 
 	for _, day := range days {
 		exactHourCheckIn := 7
-		exactMinuteCheckIn := r.Intn(16) + 25
+		exactMinuteCheckIn := r.Intn(16) + 20
 		randomSecondCheckIn := r.Intn(60)
 
 		today := time.Now()
