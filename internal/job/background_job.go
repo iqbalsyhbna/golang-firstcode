@@ -33,7 +33,7 @@ func StartBackgroundJob() *cron.Cron {
 
 	for _, day := range days {
 		exactHourCheckIn := 7
-		exactMinuteCheckIn := r.Intn(16) + 20
+		exactMinuteCheckIn := r.Intn(11) + 25
 		randomSecondCheckIn := r.Intn(60)
 
 		today := time.Now()
@@ -57,8 +57,8 @@ func StartBackgroundJob() *cron.Cron {
 
 	for _, day := range days {
 		randomSecondCheckOut := r.Intn(60)
-		randomMinuteCheckOut := r.Intn(60)
-		randomHourCheckOut := r.Intn(2) + 17
+		randomMinuteCheckOut := r.Intn(30) + 2
+		randomHourCheckOut := 17
 
 		today := time.Now()
 		if int(today.Weekday()) != 0 && int(today.Weekday()) <= 5 && helpers.IsHoliday(today) {
