@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"test-golang/internal/models"
@@ -57,8 +56,12 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		log.Printf("Error decoding request payload: %v", err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if user.Name == "" {
+		common.WriteError(w, http.StatusBadRequest, "Name cannot be empty")
 		return
 	}
 
@@ -70,7 +73,6 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	common.WriteJSON(w, http.StatusCreated, createdUser, "Successfully created user")
 }
-
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -82,6 +84,11 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		common.WriteError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if user.Name == "" {
+		common.WriteError(w, http.StatusBadRequest, "Name cannot be empty")
 		return
 	}
 

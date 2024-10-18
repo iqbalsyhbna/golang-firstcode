@@ -56,14 +56,17 @@ func (h *ArticleHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
 func (h *ArticleHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
 	var article models.Article
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
-		fmt.Println(err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if article.Title == "" || article.Content == "" {
+		common.WriteError(w, http.StatusBadRequest, "Title cannot be empty")
 		return
 	}
 
 	createdArticle, err := h.service.Create(article)
 	if err != nil {
-		fmt.Println(err)
 		common.WriteError(w, http.StatusInternalServerError, "Failed to create article")
 		return
 	}
@@ -75,15 +78,19 @@ func (h *ArticleHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		fmt.Println(err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid article ID")
 		return
 	}
 
 	var article models.Article
+
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
-		fmt.Println(err)
 		common.WriteError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if article.Title == "" || article.Content == "" {
+		common.WriteError(w, http.StatusBadRequest, "Title cannot be empty")
 		return
 	}
 
