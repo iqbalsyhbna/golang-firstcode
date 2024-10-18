@@ -39,6 +39,7 @@ func NewApp() *App {
 	userHandler := handlers.NewUserHandler(userService)
 
 	routes.SetupRoutes(app.Router, articleHandler, userHandler)
+
 	return app
 }
 
