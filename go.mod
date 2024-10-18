@@ -1,4 +1,4 @@
-module test-golang
+module golang-firstcode
 
 go 1.23
 

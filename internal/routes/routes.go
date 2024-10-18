@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"test-golang/internal/handlers"
-	"test-golang/internal/middleware"
+	"golang-firstcode/internal/handlers"
+	"golang-firstcode/internal/middleware"
 
 	"github.com/gorilla/mux"
 )
