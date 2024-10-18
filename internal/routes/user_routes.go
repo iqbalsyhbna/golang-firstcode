@@ -1,8 +1,8 @@
 package routes
 
 import (
+	"golang-firstcode/internal/handlers"
 	"net/http"
-	"test-golang/internal/handlers"
 
 	"github.com/gorilla/mux"
 )

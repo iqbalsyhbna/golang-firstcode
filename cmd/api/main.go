@@ -1,12 +1,12 @@
 package main
 
 import (
+	"golang-firstcode/internal/config"
+	"golang-firstcode/internal/handlers"
+	"golang-firstcode/internal/routes"
+	"golang-firstcode/internal/service"
 	"log"
 	"net/http"
-	"test-golang/internal/config"
-	"test-golang/internal/handlers"
-	"test-golang/internal/routes"
-	"test-golang/internal/service"
 
 	"github.com/gorilla/mux"
 )

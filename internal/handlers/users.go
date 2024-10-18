@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"golang-firstcode/internal/models"
+	"golang-firstcode/internal/service"
+	"golang-firstcode/pkg/common"
 	"net/http"
 	"strconv"
-	"test-golang/internal/models"
-	"test-golang/internal/service"
-	"test-golang/pkg/common"
 
 	"github.com/gorilla/mux"
 )

@@ -2,11 +2,11 @@
 package main
 
 import (
+	background "golang-firstcode/internal/job"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	background "test-golang/internal/job"
 )
 
 func main() {

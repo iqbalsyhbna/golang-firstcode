@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"test-golang/internal/helpers"
-	"test-golang/internal/models"
+	"golang-firstcode/internal/helpers"
+	"golang-firstcode/internal/models"
 )
 
 type ArticleService struct {
