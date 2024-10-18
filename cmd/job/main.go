@@ -2,6 +2,7 @@
 package main
 
 import (
+	"golang-firstcode/internal/config"
 	background "golang-firstcode/internal/job"
 	"log"
 	"os"
@@ -10,6 +11,13 @@ import (
 )
 
 func main() {
+	config, err := config.LoadConfig()
+	if err != nil {
+		log.Printf("Warning: Error loading config: %v", err)
+	}
+
+	log.Printf("Loaded config: %+v", config)
+
 	log.Println("Starting background job service...")
 
 	// Start the background job

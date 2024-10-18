@@ -1,3 +1,4 @@
-tmp/runner-build.exe
 .env
 tmp/runner-build.exe
+tmp/runner-build-errors.log
+tmp/runner-build.exe~

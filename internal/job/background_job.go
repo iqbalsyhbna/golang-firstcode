@@ -13,7 +13,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/robfig/cron/v3"
 )
 
@@ -139,11 +138,6 @@ func postToAPI(checkType, code string) error {
 }
 
 func getToken() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
 	if token := os.Getenv("AUTH_TOKEN"); token != "" {
 		return token
 	}
@@ -152,11 +146,6 @@ func getToken() string {
 }
 
 func getDeviceID() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
 	if deviceID := os.Getenv("DEVICE_ID"); deviceID != "" {
 		return deviceID
 	}
@@ -165,11 +154,6 @@ func getDeviceID() string {
 }
 
 func getPlatformID() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
 	if platformID := os.Getenv("PLATFORM_ID"); platformID != "" {
 		return platformID
 	}
@@ -178,11 +162,6 @@ func getPlatformID() string {
 }
 
 func getAPIURL() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
 	if url := os.Getenv("API_URL"); url != "" {
 		return url
 	}
