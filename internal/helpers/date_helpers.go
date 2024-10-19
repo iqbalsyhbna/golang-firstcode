@@ -16,6 +16,18 @@ type Holiday struct {
 	Name string `json:"keterangan"`
 }
 
+type CustomHoliday struct {
+	Date        string `json:"date"`
+	Description string `json:"description"`
+}
+
+var customHolidays = []CustomHoliday{
+	{
+		Date:        "2024-10-30",
+		Description: "Cuti CPNS",
+	},
+}
+
 // Fungsi untuk mendapatkan daftar tanggal merah dari API
 func fetchHolidays() ([]Holiday, error) {
 	// Mengabaikan verifikasi sertifikat SSL
@@ -57,6 +69,14 @@ func IsHoliday(date time.Time) bool {
 	}
 
 	dateStr := date.Format("2006-01-02")
+
+	for _, holiday := range customHolidays {
+		if dateStr == holiday.Date {
+			log.Printf("%s is a custom holiday: %s", dateStr, holiday.Description)
+			return true
+		}
+	}
+
 	for _, holiday := range holidays {
 		if dateStr == holiday.Date {
 			return true

@@ -25,57 +25,119 @@ type PresenceData struct {
 	Longitude float64 `json:"longitude"`
 }
 
+type WorkDay struct {
+	Name string
+	Date time.Time
+}
+
+func getDayName(t time.Time) string {
+	switch t.Weekday() {
+	case time.Monday:
+		return "MON"
+	case time.Tuesday:
+		return "TUE"
+	case time.Wednesday:
+		return "WED"
+	case time.Thursday:
+		return "THU"
+	case time.Friday:
+		return "FRI"
+	default:
+		return ""
+	}
+}
+
+func getWorkDaysThisWeek() []WorkDay {
+	now := time.Now()
+	currentWeekDay := now.Weekday()
+
+	monday := now.AddDate(0, 0, -int(currentWeekDay)+1)
+
+	workDays := []WorkDay{}
+	for i := 0; i < 5; i++ {
+		date := monday.AddDate(0, 0, i)
+		day := WorkDay{
+			Name: getDayName(date),
+			Date: date,
+		}
+		workDays = append(workDays, day)
+	}
+
+	return workDays
+}
+
 func StartBackgroundJob() *cron.Cron {
 	c := cron.New(cron.WithSeconds())
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	days := []string{"1", "2", "3", "4", "5"}
+	workDays := getWorkDaysThisWeek()
 
-	for _, day := range days {
+	for _, workDay := range workDays {
 		exactHourCheckIn := 7
 		exactMinuteCheckIn := r.Intn(11) + 25
 		randomSecondCheckIn := r.Intn(60)
 
-		today := time.Now()
-		if int(today.Weekday()) != 0 && int(today.Weekday()) <= 5 && helpers.IsHoliday(today) {
-			log.Printf("Skipping check-in job for day %s because it's a holiday", day)
+		if helpers.IsHoliday(workDay.Date) {
+			log.Printf("Skipping check-in job for %s (%s) because it's a holiday",
+				workDay.Name,
+				workDay.Date.Format("2006-01-02"))
 			continue
 		}
+
+		day := workDay.Name
+		date := workDay.Date
 
 		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
 		_, err := c.AddFunc(checkInSchedule, func() {
 			if err := postToAPI("Check-in", "851269"); err != nil {
-				log.Printf("Failed to perform check-in: %v", err)
+				log.Printf("Failed to perform check-in for %s (%s): %v",
+					day, date.Format("2006-01-02"), err)
 			}
 		})
 
 		if err != nil {
-			log.Fatalf("Failed to schedule check-in job for day %s: %v", day, err)
+			log.Fatalf("Failed to schedule check-in job for %s (%s): %v",
+				day, date.Format("2006-01-02"), err)
 		}
-		log.Printf("Scheduled check-in job for day %s at %02d:%02d:%02d", day, exactHourCheckIn, exactMinuteCheckIn, randomSecondCheckIn)
+
+		log.Printf("Scheduled check-in job for %s (%s) at %02d:%02d:%02d",
+			day, date.Format("2006-01-02"),
+			exactHourCheckIn, exactMinuteCheckIn, randomSecondCheckIn)
 	}
 
-	for _, day := range days {
+	for _, workDay := range workDays {
 		randomSecondCheckOut := r.Intn(60)
 		randomMinuteCheckOut := r.Intn(30) + 2
 		randomHourCheckOut := 17
 
-		today := time.Now()
-		if int(today.Weekday()) != 0 && int(today.Weekday()) <= 5 && helpers.IsHoliday(today) {
-			log.Printf("Skipping check-out job for day %s because it's a holiday", day)
+		if helpers.IsHoliday(workDay.Date) {
+			log.Printf("Skipping check-out job for %s (%s) because it's a holiday",
+				workDay.Name,
+				workDay.Date.Format("2006-01-02"))
 			continue
 		}
 
-		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
+		day := workDay.Name
+		date := workDay.Date
+
+		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s",
+			randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
+
 		_, err := c.AddFunc(checkOutSchedule, func() {
 			if err := postToAPI("Check-out", "851269"); err != nil {
-				log.Printf("Failed to perform check-out: %v", err)
+				log.Printf("Failed to perform check-out for %s (%s): %v",
+					day, date.Format("2006-01-02"), err)
 			}
 		})
+
 		if err != nil {
-			log.Fatalf("Failed to schedule check-out job for day %s: %v", day, err)
+			log.Fatalf("Failed to schedule check-out job for %s (%s): %v",
+				day, date.Format("2006-01-02"), err)
 		}
-		log.Printf("Scheduled check-out job for day %s at %02d:%02d:%02d", day, randomHourCheckOut, randomMinuteCheckOut, randomSecondCheckOut)
+
+		log.Printf("Scheduled check-out job for %s (%s) at %02d:%02d:%02d",
+			day, date.Format("2006-01-02"),
+			randomHourCheckOut, randomMinuteCheckOut, randomSecondCheckOut)
 	}
 
 	c.Start()
