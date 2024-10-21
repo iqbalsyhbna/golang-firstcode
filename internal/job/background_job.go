@@ -89,7 +89,7 @@ func StartBackgroundJob() *cron.Cron {
 
 		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
 		_, err := c.AddFunc(checkInSchedule, func() {
-			if err := postToAPI("Check-in", "851269"); err != nil {
+			if err := postToAPI("Check-in", "735995"); err != nil {
 				log.Printf("Failed to perform check-in for %s (%s): %v",
 					day, date.Format("2006-01-02"), err)
 			}
@@ -124,7 +124,7 @@ func StartBackgroundJob() *cron.Cron {
 			randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
 
 		_, err := c.AddFunc(checkOutSchedule, func() {
-			if err := postToAPI("Check-out", "851269"); err != nil {
+			if err := postToAPI("Check-out", "735995"); err != nil {
 				log.Printf("Failed to perform check-out for %s (%s): %v",
 					day, date.Format("2006-01-02"), err)
 			}
