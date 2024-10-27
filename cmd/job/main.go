@@ -23,8 +23,8 @@ func main() {
 
 	log.Println("Starting background job service...")
 
-	// Start the background job
-	backgroundJob := background.StartBackgroundJob()
+	// Start the background job scheduler
+	scheduler := background.StartBackgroundJob()
 
 	// Set up a channel to listen for interrupt signals for graceful shutdowns
 	sigChan := make(chan os.Signal, 1)
@@ -34,7 +34,7 @@ func main() {
 	sig := <-sigChan
 	log.Printf("Received signal: %s. Shutting down...", sig)
 
-	// Gracefully stop the cron jobs
-	backgroundJob.Stop()
+	// Gracefully stop the scheduler
+	scheduler.Stop()
 	log.Println("Background job service stopped.")
 }

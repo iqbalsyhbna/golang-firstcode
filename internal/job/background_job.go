@@ -1,4 +1,3 @@
-// internal/background/job.go
 package background
 
 import (
@@ -11,10 +10,18 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
 )
+
+type JobScheduler struct {
+	cron    *cron.Cron
+	mutex   sync.Mutex
+	jobIDs  []cron.EntryID
+	randGen *rand.Rand
+}
 
 type PresenceData struct {
 	CheckType string  `json:"check_type"`
@@ -28,6 +35,128 @@ type PresenceData struct {
 type WorkDay struct {
 	Name string
 	Date time.Time
+}
+
+func NewJobScheduler() *JobScheduler {
+	return &JobScheduler{
+		cron:    cron.New(cron.WithSeconds()),
+		jobIDs:  make([]cron.EntryID, 0),
+		randGen: rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
+}
+
+func (js *JobScheduler) Start() {
+	// Start the cron scheduler
+	js.cron.Start()
+
+	// Schedule the weekly regeneration job
+	js.cron.AddFunc("CRON_TZ=Asia/Jakarta 0 0 0 * * MON", func() {
+		js.RegenerateJobs()
+	})
+
+	// Generate initial jobs
+	js.RegenerateJobs()
+
+	log.Println("Job scheduler started with weekly regeneration enabled")
+}
+
+func (js *JobScheduler) Stop() {
+	js.cron.Stop()
+}
+
+func (js *JobScheduler) RegenerateJobs() {
+	js.mutex.Lock()
+	defer js.mutex.Unlock()
+
+	// Remove existing jobs
+	for _, id := range js.jobIDs {
+		js.cron.Remove(id)
+	}
+	js.jobIDs = make([]cron.EntryID, 0)
+
+	workDays := getWorkDaysThisWeek()
+
+	// Schedule check-in jobs
+	for _, workDay := range workDays {
+		if helpers.IsHoliday(workDay.Date) {
+			log.Printf("Skipping check-in job for %s (%s) because it's a holiday",
+				workDay.Name, workDay.Date.Format("2006-01-02"))
+			continue
+		}
+
+		exactHourCheckIn := 7
+		exactMinuteCheckIn := js.randGen.Intn(11) + 25
+		randomSecondCheckIn := js.randGen.Intn(60)
+
+		day := workDay.Name
+		date := workDay.Date
+
+		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s",
+			randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
+
+		id, err := js.cron.AddFunc(checkInSchedule, func() {
+			if err := postToAPI("Check-in", "735995"); err != nil {
+				log.Printf("Failed to perform check-in for %s (%s): %v",
+					day, date.Format("2006-01-02"), err)
+			}
+		})
+
+		if err != nil {
+			log.Printf("Failed to schedule check-in job for %s (%s): %v",
+				day, date.Format("2006-01-02"), err)
+			continue
+		}
+
+		js.jobIDs = append(js.jobIDs, id)
+		log.Printf("Scheduled check-in job for %s (%s) at %02d:%02d:%02d",
+			day, date.Format("2006-01-02"),
+			exactHourCheckIn, exactMinuteCheckIn, randomSecondCheckIn)
+	}
+
+	// Schedule check-out jobs
+	for _, workDay := range workDays {
+		if helpers.IsHoliday(workDay.Date) {
+			log.Printf("Skipping check-out job for %s (%s) because it's a holiday",
+				workDay.Name, workDay.Date.Format("2006-01-02"))
+			continue
+		}
+
+		randomSecondCheckOut := js.randGen.Intn(60)
+		randomMinuteCheckOut := js.randGen.Intn(30) + 2
+		randomHourCheckOut := 17
+
+		day := workDay.Name
+		date := workDay.Date
+
+		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s",
+			randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
+
+		id, err := js.cron.AddFunc(checkOutSchedule, func() {
+			if err := postToAPI("Check-out", "735995"); err != nil {
+				log.Printf("Failed to perform check-out for %s (%s): %v",
+					day, date.Format("2006-01-02"), err)
+			}
+		})
+
+		if err != nil {
+			log.Printf("Failed to schedule check-out job for %s (%s): %v",
+				day, date.Format("2006-01-02"), err)
+			continue
+		}
+
+		js.jobIDs = append(js.jobIDs, id)
+		log.Printf("Scheduled check-out job for %s (%s) at %02d:%02d:%02d",
+			day, date.Format("2006-01-02"),
+			randomHourCheckOut, randomMinuteCheckOut, randomSecondCheckOut)
+	}
+
+	log.Printf("Successfully regenerated %d jobs for the week", len(js.jobIDs))
+}
+
+func StartBackgroundJob() *JobScheduler {
+	scheduler := NewJobScheduler()
+	scheduler.Start()
+	return scheduler
 }
 
 func getDayName(t time.Time) string {
@@ -64,85 +193,6 @@ func getWorkDaysThisWeek() []WorkDay {
 	}
 
 	return workDays
-}
-
-func StartBackgroundJob() *cron.Cron {
-	c := cron.New(cron.WithSeconds())
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	workDays := getWorkDaysThisWeek()
-
-	for _, workDay := range workDays {
-		exactHourCheckIn := 7
-		exactMinuteCheckIn := r.Intn(11) + 25
-		randomSecondCheckIn := r.Intn(60)
-
-		if helpers.IsHoliday(workDay.Date) {
-			log.Printf("Skipping check-in job for %s (%s) because it's a holiday",
-				workDay.Name,
-				workDay.Date.Format("2006-01-02"))
-			continue
-		}
-
-		day := workDay.Name
-		date := workDay.Date
-
-		checkInSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s", randomSecondCheckIn, exactMinuteCheckIn, exactHourCheckIn, day)
-		_, err := c.AddFunc(checkInSchedule, func() {
-			if err := postToAPI("Check-in", "735995"); err != nil {
-				log.Printf("Failed to perform check-in for %s (%s): %v",
-					day, date.Format("2006-01-02"), err)
-			}
-		})
-
-		if err != nil {
-			log.Fatalf("Failed to schedule check-in job for %s (%s): %v",
-				day, date.Format("2006-01-02"), err)
-		}
-
-		log.Printf("Scheduled check-in job for %s (%s) at %02d:%02d:%02d",
-			day, date.Format("2006-01-02"),
-			exactHourCheckIn, exactMinuteCheckIn, randomSecondCheckIn)
-	}
-
-	for _, workDay := range workDays {
-		randomSecondCheckOut := r.Intn(60)
-		randomMinuteCheckOut := r.Intn(30) + 2
-		randomHourCheckOut := 17
-
-		if helpers.IsHoliday(workDay.Date) {
-			log.Printf("Skipping check-out job for %s (%s) because it's a holiday",
-				workDay.Name,
-				workDay.Date.Format("2006-01-02"))
-			continue
-		}
-
-		day := workDay.Name
-		date := workDay.Date
-
-		checkOutSchedule := fmt.Sprintf("CRON_TZ=Asia/Jakarta %d %d %d * * %s",
-			randomSecondCheckOut, randomMinuteCheckOut, randomHourCheckOut, day)
-
-		_, err := c.AddFunc(checkOutSchedule, func() {
-			if err := postToAPI("Check-out", "735995"); err != nil {
-				log.Printf("Failed to perform check-out for %s (%s): %v",
-					day, date.Format("2006-01-02"), err)
-			}
-		})
-
-		if err != nil {
-			log.Fatalf("Failed to schedule check-out job for %s (%s): %v",
-				day, date.Format("2006-01-02"), err)
-		}
-
-		log.Printf("Scheduled check-out job for %s (%s) at %02d:%02d:%02d",
-			day, date.Format("2006-01-02"),
-			randomHourCheckOut, randomMinuteCheckOut, randomSecondCheckOut)
-	}
-
-	c.Start()
-	log.Println("Cron jobs started with random times for check-in and check-out.")
-	return c
 }
 
 func postToAPI(checkType, code string) error {
