@@ -26,6 +26,10 @@ var customHolidays = []CustomHoliday{
 		Date:        "2024-10-30",
 		Description: "Cuti CPNS",
 	},
+	{
+		Date:        "2024-11-27",
+		Description: "Pilkada 2024",
+	},
 }
 
 // Fungsi untuk mendapatkan daftar tanggal merah dari API
