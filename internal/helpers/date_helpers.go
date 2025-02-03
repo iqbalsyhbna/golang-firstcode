@@ -42,6 +42,10 @@ var customHolidays = []CustomHoliday{
 		Date:        "2024-12-31",
 		Description: "Cuti",
 	},
+	{
+		Date: "2025-02-04",
+		Description: "Cuti",
+	},
 }
 
 // Fungsi untuk mendapatkan daftar tanggal merah dari API
