@@ -43,7 +43,11 @@ var customHolidays = []CustomHoliday{
 		Description: "Cuti",
 	},
 	{
-		Date: "2025-02-04",
+		Date:        "2025-02-04",
+		Description: "Cuti",
+	},
+	{
+		Date:        "2025-03-07",
 		Description: "Cuti",
 	},
 }
